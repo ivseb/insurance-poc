@@ -76,8 +76,6 @@ jobs:
           build-args: JAR=policy-api/build/libs/policy-api-all.jar
           tags: ${{ env.PREFIX }}-policy-api:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-policy-api:latest
           push: true
-          cache-from: type=gha,scope=policy-api
-          cache-to: type=gha,scope=policy-api,mode=max
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -85,8 +83,6 @@ jobs:
           build-args: JAR=bff/build/libs/bff-all.jar
           tags: ${{ env.PREFIX }}-bff:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-bff:latest
           push: true
-          cache-from: type=gha,scope=bff
-          cache-to: type=gha,scope=bff,mode=max
 
   # 2b) Frontend web (in parallelo col jvm)
   web:
@@ -123,8 +119,6 @@ jobs:
           file: docker/Dockerfile.web
           tags: ${{ env.PREFIX }}-web:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-web:latest
           push: true
-          cache-from: type=gha,scope=web
-          cache-to: type=gha,scope=web,mode=max
 
   # 3) Bump dei tag SOLO per le immagini ricostruite + commit GitOps
   deploy:
