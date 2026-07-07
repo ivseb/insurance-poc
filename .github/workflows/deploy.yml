@@ -65,7 +65,10 @@ jobs:
       - name: Build fat jars
         run: ./gradlew :policy-api:buildFatJar :bff:buildFatJar --build-cache
       - uses: docker/login-action@v3
-        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -110,7 +113,10 @@ jobs:
       - name: Export web (static site)
         run: (cd web && kobweb export --layout static --notty)
       - uses: docker/login-action@v3
-        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
           context: .
