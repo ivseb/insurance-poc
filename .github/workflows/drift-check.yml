@@ -16,15 +16,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # serve tutta la storia per `git log`
-      - name: Confronta codice (main) vs tag deployati
+      - name: Confronta codice (main) vs tag deployati (env/prod)
         run: |
           set -uo pipefail
+          # I tag realmente deployati vivono su env/prod (quello che segue ArgoCD).
+          git fetch -q origin env/prod 2>/dev/null || { echo "::error::branch env/prod assente: nulla è ancora deployato"; exit 1; }
+          git show origin/env/prod:deploy/kustomization.yaml > /tmp/deployed-kustomization.yaml
           drift=0
           tag_of() {
             python3 - "$1" <<'PY'
           import sys
           key = sys.argv[1]; cur = None
-          for line in open('deploy/kustomization.yaml'):
+          for line in open('/tmp/deployed-kustomization.yaml'):
               s = line.strip()
               if s.startswith('- name:'):
                   cur = s.split('name:', 1)[1].strip()

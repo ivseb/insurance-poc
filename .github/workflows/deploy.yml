@@ -164,10 +164,12 @@ jobs:
           if [ "${{ needs.web.result }}" = "success" ]; then
             ../kustomize edit set image $PREFIX-web=$PREFIX-web:$TAG
           fi
-      - name: Commit manifests
+      - name: Pubblica sul branch di deploy (env/prod)
+        # main resta protetto (solo PR): i tag li scrive la CI su env/prod, che ArgoCD segue.
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add deploy/kustomization.yaml
-          git commit -m "ci: deploy ${{ needs.changes.outputs.tag }} [skip ci]" || { echo "nothing to commit"; exit 0; }
-          git push
+          git commit -m "ci: deploy ${{ needs.changes.outputs.tag }}" || { echo "nothing to commit"; exit 0; }
+          git branch -f env/prod
+          git push -f origin env/prod

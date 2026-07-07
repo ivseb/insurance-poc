@@ -7,7 +7,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/ivseb/insurance-poc
-    targetRevision: main
+    # main è protetto (solo PR); i tag di deploy vivono su env/prod, scritto dalla CI.
+    targetRevision: env/prod
     path: deploy
   destination:
     server: https://kubernetes.default.svc
