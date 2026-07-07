@@ -14,64 +14,137 @@ concurrency:
   group: cicd-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  PREFIX: ghcr.io/${{ github.repository_owner }}/insurance-poc
+
 jobs:
-  build-deploy:
-    # Evita il loop: il commit di bump tag è marcato [skip ci]
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+  # 1) Capisce COSA è cambiato → ricostruiamo solo il necessario
+  changes:
     runs-on: ubuntu-latest
-    env:
-      PREFIX: ghcr.io/${{ github.repository_owner }}/insurance-poc
+    outputs:
+      jvm: ${{ steps.f.outputs.jvm }}
+      web: ${{ steps.f.outputs.web }}
+      tag: ${{ steps.t.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - id: t
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: dorny/paths-filter@v3
+        id: f
         with:
-          distribution: temurin
-          java-version: '17'
+          filters: |
+            common: &common
+              - 'shared/**'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'settings.gradle.kts'
+              - 'build.gradle.kts'
+              - 'gradle.properties'
+            jvm:
+              - *common
+              - 'bff/**'
+              - 'policy-api/**'
+              - 'docker/Dockerfile.service'
+            web:
+              - *common
+              - 'web/**'
+              - 'designsystem/**'
+              - 'docker/Dockerfile.web'
+              - 'docker/nginx.conf'
 
+  # 2a) Backend JVM (in parallelo col web)
+  jvm:
+    needs: changes
+    if: needs.changes.outputs.jvm == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
+      - name: Build fat jars
+        run: ./gradlew :policy-api:buildFatJar :bff:buildFatJar --build-cache
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.service
+          build-args: JAR=policy-api/build/libs/policy-api-all.jar
+          tags: ${{ env.PREFIX }}-policy-api:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-policy-api:latest
+          push: true
+          cache-from: type=gha,scope=policy-api
+          cache-to: type=gha,scope=policy-api,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.service
+          build-args: JAR=bff/build/libs/bff-all.jar
+          tags: ${{ env.PREFIX }}-bff:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-bff:latest
+          push: true
+          cache-from: type=gha,scope=bff
+          cache-to: type=gha,scope=bff,mode=max
 
-      - name: Build fat jars (policy-api, bff)
-        run: ./gradlew :policy-api:buildFatJar :bff:buildFatJar --no-daemon
-
+  # 2b) Frontend web (in parallelo col jvm)
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache Kobweb CLI
+        uses: actions/cache@v4
+        with:
+          path: kobweb-0.9.18
+          key: kobweb-cli-0.9.18
       - name: Install Kobweb CLI
         run: |
-          curl -sSL https://github.com/varabyte/kobweb-cli/releases/download/v0.9.18/kobweb-0.9.18.zip -o kobweb.zip
-          unzip -q kobweb.zip
+          if [ ! -x kobweb-0.9.18/bin/kobweb ]; then
+            curl -sSL https://github.com/varabyte/kobweb-cli/releases/download/v0.9.18/kobweb-0.9.18.zip -o kobweb.zip
+            unzip -q kobweb.zip
+          fi
           echo "$GITHUB_WORKSPACE/kobweb-0.9.18/bin" >> "$GITHUB_PATH"
-
       - name: Export web (static site)
         run: (cd web && kobweb export --layout static --notty)
-
-      - name: Compute image tag
-        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+      - uses: docker/build-push-action@v6
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          context: .
+          file: docker/Dockerfile.web
+          tags: ${{ env.PREFIX }}-web:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-web:latest
+          push: true
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
 
-      - name: Build & push images
+  # 3) Bump dei tag SOLO per le immagini ricostruite + commit GitOps
+  deploy:
+    needs: [ changes, jvm, web ]
+    if: ${{ always() && !cancelled() && needs.jvm.result != 'failure' && needs.web.result != 'failure' && (needs.jvm.result == 'success' || needs.web.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kustomize
+        run: curl -sSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+      - name: Bump image tags
         run: |
-          set -euo pipefail
-          for svc in policy-api bff; do
-            docker build -f docker/Dockerfile.service \
-              --build-arg JAR=$svc/build/libs/$svc-all.jar \
-              -t "$PREFIX-$svc:$TAG" -t "$PREFIX-$svc:latest" .
-            docker push "$PREFIX-$svc:$TAG"
-            docker push "$PREFIX-$svc:latest"
-          done
-          docker build -f docker/Dockerfile.web -t "$PREFIX-web:$TAG" -t "$PREFIX-web:latest" .
-          docker push "$PREFIX-web:$TAG"
-          docker push "$PREFIX-web:latest"
-
-      - name: Bump image tags (GitOps commit)
+          TAG=${{ needs.changes.outputs.tag }}
+          cd deploy
+          if [ "${{ needs.jvm.result }}" = "success" ]; then
+            ../kustomize edit set image \
+              $PREFIX-policy-api=$PREFIX-policy-api:$TAG \
+              $PREFIX-bff=$PREFIX-bff:$TAG
+          fi
+          if [ "${{ needs.web.result }}" = "success" ]; then
+            ../kustomize edit set image $PREFIX-web=$PREFIX-web:$TAG
+          fi
+      - name: Commit manifests
         run: |
-          sed -i "s/newTag: .*/newTag: $TAG/" deploy/kustomization.yaml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add deploy/kustomization.yaml
-          git commit -m "ci: deploy $TAG [skip ci]" || { echo "nothing to commit"; exit 0; }
+          git commit -m "ci: deploy ${{ needs.changes.outputs.tag }} [skip ci]" || { echo "nothing to commit"; exit 0; }
           git push
