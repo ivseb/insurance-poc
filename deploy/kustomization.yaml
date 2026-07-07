@@ -20,4 +20,4 @@ images:
   newTag: 1a1971b
 - name: ghcr.io/ivseb/insurance-poc-web
   newName: ghcr.io/ivseb/insurance-poc-web
-  newTag: 9829ad6
+  newTag: bd5a073
