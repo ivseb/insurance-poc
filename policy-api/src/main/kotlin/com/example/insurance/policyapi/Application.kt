@@ -91,3 +91,5 @@ object FakeData {
         Agency("ag-fi", "Firenze", "ACME Firenze Duomo", "Via dei Calzaiuoli 20, 50122", "+39 055 567 8901"),
     )
 }
+
+// build-cache CI probe
