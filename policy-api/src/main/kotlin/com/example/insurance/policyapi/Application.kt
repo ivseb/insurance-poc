@@ -26,6 +26,8 @@ fun main() {
         install(CallLogging)
         routing {
             get("/health") { call.respond(mapOf("status" to "ok")) }
+            // SHA del commit di build (env BUILD_SHA) per verificare il drift col codice su main.
+            get("/version") { call.respond(mapOf("sha" to (System.getenv("BUILD_SHA") ?: "dev"))) }
 
             get("/policies") { call.respond(FakeData.summaries) }
 

@@ -4,7 +4,11 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - '**.md'   # le modifiche solo-documentazione non ricostruiscono le immagini
+      - '**.md'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
 
 permissions:
   contents: write   # per committare il bump dei tag (GitOps)
@@ -18,8 +22,21 @@ env:
   PREFIX: ghcr.io/${{ github.repository_owner }}/insurance-poc
 
 jobs:
-  # 1) Capisce COSA è cambiato → ricostruiamo solo il necessario
+  # PR gate: compila tutto (deve essere VERDE per poter fare merge su main). Niente push/deploy.
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compile (jvm + web)
+        run: ./gradlew :policy-api:build :bff:build :shared:build :designsystem:compileKotlinJs :web:compileKotlinJs --build-cache
+
+  # Capisce COSA è cambiato → ricostruiamo solo il necessario
   changes:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       jvm: ${{ steps.f.outputs.jvm }}
@@ -52,7 +69,7 @@ jobs:
               - 'docker/Dockerfile.web'
               - 'docker/nginx.conf'
 
-  # 2a) Backend JVM (in parallelo col web)
+  # Backend JVM (in parallelo col web)
   jvm:
     needs: changes
     if: needs.changes.outputs.jvm == 'true'
@@ -73,18 +90,22 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile.service
-          build-args: JAR=policy-api/build/libs/policy-api-all.jar
+          build-args: |
+            JAR=policy-api/build/libs/policy-api-all.jar
+            SHA=${{ needs.changes.outputs.tag }}
           tags: ${{ env.PREFIX }}-policy-api:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-policy-api:latest
           push: true
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/Dockerfile.service
-          build-args: JAR=bff/build/libs/bff-all.jar
+          build-args: |
+            JAR=bff/build/libs/bff-all.jar
+            SHA=${{ needs.changes.outputs.tag }}
           tags: ${{ env.PREFIX }}-bff:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-bff:latest
           push: true
 
-  # 2b) Frontend web (in parallelo col jvm)
+  # Frontend web (in parallelo col jvm)
   web:
     needs: changes
     if: needs.changes.outputs.web == 'true'
@@ -117,10 +138,12 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile.web
+          build-args: |
+            SHA=${{ needs.changes.outputs.tag }}
           tags: ${{ env.PREFIX }}-web:${{ needs.changes.outputs.tag }},${{ env.PREFIX }}-web:latest
           push: true
 
-  # 3) Bump dei tag SOLO per le immagini ricostruite + commit GitOps
+  # Bump dei tag SOLO per le immagini ricostruite + commit GitOps
   deploy:
     needs: [ changes, jvm, web ]
     if: ${{ always() && !cancelled() && needs.jvm.result != 'failure' && needs.web.result != 'failure' && (needs.jvm.result == 'success' || needs.web.result == 'success') }}

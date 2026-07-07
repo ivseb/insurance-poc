@@ -1,0 +1,49 @@
+name: Drift check
+
+# Rete di sicurezza: verifica che ciò che è su main sia davvero ciò che è deployato.
+# Per ogni modulo confronta l'ULTIMO commit che lo tocca con il tag in deploy/kustomization.yaml.
+# Se un modulo è cambiato ma il suo tag non è stato bumpato (build fallita/saltata) → FALLISCE
+# (run rosso + email GitHub). È esattamente il caso "modifica committata ma non deployata".
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # ogni 30 minuti
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # serve tutta la storia per `git log`
+      - name: Confronta codice (main) vs tag deployati
+        run: |
+          set -uo pipefail
+          drift=0
+          tag_of() {
+            python3 - "$1" <<'PY'
+          import sys
+          key = sys.argv[1]; cur = None
+          for line in open('deploy/kustomization.yaml'):
+              s = line.strip()
+              if s.startswith('- name:'):
+                  cur = s.split('name:', 1)[1].strip()
+              if s.startswith('newTag:') and cur == key:
+                  print(s.split('newTag:', 1)[1].strip()); break
+          PY
+          }
+          check() {
+            name=$1; imgkey=$2; shift 2
+            last=$(git log -1 --format=%H -- "$@" | cut -c1-7)
+            tag=$(tag_of "$imgkey")
+            if [ "$last" != "$tag" ]; then
+              echo "::error::DRIFT [$name]: ultimo commit su main = $last, ma deployato = $tag → non allineato"
+              drift=1
+            else
+              echo "OK [$name]: $last == $tag"
+            fi
+          }
+          COMMON="shared gradle gradlew settings.gradle.kts build.gradle.kts gradle.properties"
+          check jvm ghcr.io/ivseb/insurance-poc-bff bff policy-api $COMMON docker/Dockerfile.service
+          check web ghcr.io/ivseb/insurance-poc-web web designsystem $COMMON docker/Dockerfile.web docker/nginx.conf
+          exit $drift

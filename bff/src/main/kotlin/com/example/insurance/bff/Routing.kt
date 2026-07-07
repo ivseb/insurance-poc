@@ -18,6 +18,10 @@ fun Application.configureRouting() {
     routing {
         get("/health") { call.respond(mapOf("status" to "ok")) }
 
+        // SHA del commit da cui è stata buildata l'immagine (iniettato in build → env BUILD_SHA).
+        // Serve a verificare COSA gira davvero rispetto a main (drift).
+        get("/version") { call.respond(mapOf("sha" to (System.getenv("BUILD_SHA") ?: "dev"))) }
+
         // --- login mock: credenziali non vuote -> JWT firmato dal BFF ---
         // Web: JWT in cookie HttpOnly/SameSite (non leggibile dal JS). Android: usa il token nel body.
         post("/api/auth/login") {
