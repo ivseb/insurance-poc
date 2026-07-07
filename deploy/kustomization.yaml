@@ -14,10 +14,10 @@ resources:
 images:
 - name: ghcr.io/ivseb/insurance-poc-bff
   newName: ghcr.io/ivseb/insurance-poc-bff
-  newTag: 1a1971b
+  newTag: 21bb58c
 - name: ghcr.io/ivseb/insurance-poc-policy-api
   newName: ghcr.io/ivseb/insurance-poc-policy-api
-  newTag: 1a1971b
+  newTag: 21bb58c
 - name: ghcr.io/ivseb/insurance-poc-web
   newName: ghcr.io/ivseb/insurance-poc-web
-  newTag: bd5a073
+  newTag: 21bb58c
