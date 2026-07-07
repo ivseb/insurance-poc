@@ -3,6 +3,8 @@ name: CI/CD
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'   # le modifiche solo-documentazione non ricostruiscono le immagini
 
 permissions:
   contents: write   # per committare il bump dei tag (GitOps)

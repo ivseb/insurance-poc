@@ -1,0 +1,23 @@
+# Ingress per il dashboard ArgoCD (host nip.io, http; server in modalità --insecure).
+# Applicalo a mano dopo aver installato ingress-nginx e messo argocd-server in insecure:
+#   kubectl -n argocd patch configmap argocd-cmd-params-cm --type merge -p '{"data":{"server.insecure":"true"}}'
+#   kubectl -n argocd rollout restart deploy/argocd-server
+#   kubectl apply -f deploy/argocd/argocd-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: argocd.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
