@@ -4,17 +4,19 @@ kind: Kustomization
 namespace: insurance-poc
 
 resources:
-  - namespace.yaml
-  - policy-api.yaml
-  - bff.yaml
-  - web.yaml
-  - ingress.yaml
+- namespace.yaml
+- policy-api.yaml
+- bff.yaml
+- web.yaml
+- ingress.yaml
 
 # La CI aggiorna i tag qui (`kustomize edit set image ...`) a ogni push → ArgoCD sincronizza.
 images:
-  - name: ghcr.io/ivseb/insurance-poc-policy-api
-    newTag: 97d426f
-  - name: ghcr.io/ivseb/insurance-poc-bff
-    newTag: 97d426f
-  - name: ghcr.io/ivseb/insurance-poc-web
-    newTag: 97d426f
+- name: ghcr.io/ivseb/insurance-poc-bff
+  newName: ghcr.io/ivseb/insurance-poc-bff
+  newTag: 1a1971b
+- name: ghcr.io/ivseb/insurance-poc-policy-api
+  newName: ghcr.io/ivseb/insurance-poc-policy-api
+  newTag: 1a1971b
+- name: ghcr.io/ivseb/insurance-poc-web
+  newTag: 97d426f
