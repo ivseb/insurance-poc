@@ -19,4 +19,5 @@ images:
   newName: ghcr.io/ivseb/insurance-poc-policy-api
   newTag: 1a1971b
 - name: ghcr.io/ivseb/insurance-poc-web
-  newTag: 97d426f
+  newName: ghcr.io/ivseb/insurance-poc-web
+  newTag: 9829ad6
