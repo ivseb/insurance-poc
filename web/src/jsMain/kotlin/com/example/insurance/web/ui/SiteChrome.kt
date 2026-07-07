@@ -96,7 +96,7 @@ fun AppHeader(navigate: (String) -> Unit) {
     Header(attrs = { classes(ChromeStyles.appbar) }) {
         Div(attrs = { classes("container", ChromeStyles.appbarInner) }) {
             BrandLogo()
-            Nav(attrs = { classes(ChromeStyles.appNav); attr("aria-label", "Area personale") }) {
+            Nav(attrs = { classes(ChromeStyles.appNav); attr("aria-label", "Area riservata") }) {
                 AppLink(Routes.AREA_POLICIES, "Le mie polizze", className = "${ChromeStyles.appLink} ${ChromeStyles.appLinkActive}")
             }
             Div(attrs = { classes(ChromeStyles.spacer) }) {}
