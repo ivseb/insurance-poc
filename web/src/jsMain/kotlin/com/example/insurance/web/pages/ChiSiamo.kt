@@ -17,7 +17,7 @@ fun ChiSiamoPage() {
     CompositionLocalProvider(LocalNavigate provides navigate) {
         PageShell(navigate) {
             PageSection {
-                SectionHead("Chi siamo", "Una compagnia vicina alle persone")
+                SectionHead("Chi siamo?", "Una compagnia vicina alle persone")
                 P { Text("ACME Assicurazioni è una POC dimostrativa: un'assicurazione moderna che mette al centro la semplicità, la trasparenza e l'assistenza reale.") }
                 P { Text("Operiamo su tre linee — Auto, Casa e Vita — con un'area personale digitale per gestire polizze e sinistri in autonomia.") }
             }
