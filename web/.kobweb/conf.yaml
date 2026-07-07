@@ -1,0 +1,14 @@
+site:
+  title: "Insurance POC"
+
+server:
+  files:
+    dev:
+      contentRoot: "build/processedResources/js/main/public"
+      script: "build/kotlin-webpack/js/developmentExecutable/insurance.js"
+    prod:
+      script: "build/kotlin-webpack/js/productionExecutable/insurance.js"
+      siteRoot: ".kobweb/site"
+
+  # 8081 per non collidere col BFF (8080)
+  port: 8081

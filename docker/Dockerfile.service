@@ -1,0 +1,8 @@
+# Immagine generica per i servizi Ktor (policy-api, bff): copia il fat-jar già buildato.
+# Il jar viene prodotto in CI da `./gradlew :<svc>:buildFatJar` (build/libs/<svc>-all.jar).
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+ARG JAR
+COPY ${JAR} /app/app.jar
+# La porta effettiva è decisa dall'app via env PORT (bff=8080, policy-api=9000).
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-api
+  labels: { app: policy-api }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: policy-api }
+  template:
+    metadata:
+      labels: { app: policy-api }
+    spec:
+      containers:
+        - name: policy-api
+          image: ghcr.io/ivseb/insurance-poc-policy-api
+          ports:
+            - containerPort: 9000
+          readinessProbe:
+            httpGet: { path: /health, port: 9000 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: policy-api
+spec:
+  selector: { app: policy-api }
+  ports:
+    - port: 9000
+      targetPort: 9000

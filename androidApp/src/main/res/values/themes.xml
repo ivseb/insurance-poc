@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema Activity minimale: la UI è disegnata da Compose, qui serve solo
+         una finestra senza action bar. Usa un tema di framework (nessuna lib extra). -->
+    <style name="Theme.Insurance" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

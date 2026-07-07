@@ -1,0 +1,14 @@
+# Riduce il contesto di build (i Dockerfile copiano solo artefatti specifici).
+.git
+.gradle
+.idea
+.kotlin
+.junie
+kotlin-js-store
+infra
+**/node_modules
+*.log
+androidApp/build
+designsystem/build
+shared/build
+# NB: NON ignorare bff/build/libs, policy-api/build/libs e web/.kobweb/site (servono alle immagini)

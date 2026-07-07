@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff
+  labels: { app: bff }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: bff }
+  template:
+    metadata:
+      labels: { app: bff }
+    spec:
+      containers:
+        - name: bff
+          image: ghcr.io/ivseb/insurance-poc-bff
+          ports:
+            - containerPort: 8080
+          env:
+            # Il BFF raggiunge policy-api via DNS di servizio. Niente STRAPI_URL → contenuti mock.
+            - name: POLICY_API_URL
+              value: "http://policy-api:9000"
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff
+spec:
+  selector: { app: bff }
+  ports:
+    - port: 8080
+      targetPort: 8080

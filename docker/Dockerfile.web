@@ -1,0 +1,5 @@
+# Frontend: nginx che serve l'export statico Kobweb + proxy /api → bff.
+# L'export è prodotto in CI da `cd web && kobweb export --layout static`.
+FROM nginx:1.27-alpine
+COPY web/.kobweb/site /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf

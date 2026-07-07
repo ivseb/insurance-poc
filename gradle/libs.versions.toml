@@ -1,0 +1,66 @@
+[versions]
+# Allineate a Kobweb 0.24.0 (richiede Gradle 9.3.1 + Kotlin 2.3.10).
+kotlin = "2.3.20"   # allineato allo stdlib tirato da Kobweb 0.24.0 (evita skew compiler/stdlib JS)
+kobweb = "0.24.0"
+composeRuntime = "1.10.2"     # androidx.compose.runtime:runtime (JB multiplatform) per il web
+composeHtml = "1.10.0"        # org.jetbrains.compose.html:html-core
+composeMultiplatform = "1.11.1" # plugin org.jetbrains.compose (modulo Desktop preview)
+ktor = "3.5.0"
+serialization = "1.11.0"
+coroutines = "1.11.0"
+agp = "8.13.2"
+composeBom = "2026.06.00"
+androidxActivity = "1.11.0"
+auth0Jwt = "4.4.0"
+logback = "1.5.12"
+
+[libraries]
+# --- comuni / KMP ---
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+# --- Ktor client (multiplatform: usato da web js + android) ---
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+
+# --- Ktor server (BFF) ---
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-contentNegotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
+ktor-server-authJwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktor-server-statusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+ktor-server-callLogging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+ktor-server-defaultHeaders = { module = "io.ktor:ktor-server-default-headers", version.ref = "ktor" }
+auth0-jwt = { module = "com.auth0:java-jwt", version.ref = "auth0Jwt" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+# --- Web (Compose HTML + Kobweb core, niente Silk) ---
+compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "composeRuntime" }
+compose-html-core = { module = "org.jetbrains.compose.html:html-core", version.ref = "composeHtml" }
+kobweb-core = { module = "com.varabyte.kobweb:kobweb-core", version.ref = "kobweb" }
+
+# --- Android ---
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kobweb-application = { id = "com.varabyte.kobweb.application", version.ref = "kobweb" }
+kobweb-library = { id = "com.varabyte.kobweb.library", version.ref = "kobweb" }
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }

@@ -1,0 +1,27 @@
+# Build / cache
+.gradle/
+build/
+**/build/
+.kotlin/
+
+# Kobweb: tieni conf.yaml, ignora cache/artefatti
+**/.kobweb/site/
+**/.kobweb/server/
+**/.kobweb/*.jar
+**/.kobweb/.kobweb-history.txt
+
+# IDE / tooling
+.idea/
+.junie/
+.claude/
+*.iml
+.DS_Store
+
+# Android / segreti locali
+local.properties
+
+# Strapi (non usato dal deploy; escluso dal repo)
+infra/
+
+# JS
+node_modules/
