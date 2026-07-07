@@ -12,8 +12,8 @@ resources:
 # La CI aggiorna i tag qui (`kustomize edit set image ...`) a ogni push → ArgoCD sincronizza.
 images:
   - name: ghcr.io/ivseb/insurance-poc-policy-api
-    newTag: latest
+    newTag: 8856671
   - name: ghcr.io/ivseb/insurance-poc-bff
-    newTag: latest
+    newTag: 8856671
   - name: ghcr.io/ivseb/insurance-poc-web
-    newTag: latest
+    newTag: 8856671
