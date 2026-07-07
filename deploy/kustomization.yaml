@@ -8,6 +8,7 @@ resources:
   - policy-api.yaml
   - bff.yaml
   - web.yaml
+  - ingress.yaml
 
 # La CI aggiorna i tag qui (`kustomize edit set image ...`) a ogni push → ArgoCD sincronizza.
 images:

@@ -29,8 +29,7 @@ kind: Service
 metadata:
   name: web
 spec:
-  # LoadBalancer: su Docker Desktop l'EXTERNAL-IP diventa localhost:80.
-  type: LoadBalancer
+  # ClusterIP: l'ingresso pubblico è l'Ingress (ingress-nginx), non più il Service.
   selector: { app: web }
   ports:
     - port: 80
