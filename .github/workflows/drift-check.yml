@@ -23,18 +23,20 @@ jobs:
       - name: Confronta codice (main) vs tag deployati (env/prod)
         run: |
           set -uo pipefail
-          git fetch -q origin env/prod 2>/dev/null || { echo "::error::branch env/prod assente: nulla è ancora deployato"; exit 1; }
+          git fetch -q --tags origin env/prod 2>/dev/null || { echo "::error::branch env/prod assente: nulla è ancora deployato"; exit 1; }
           git show origin/env/prod:chart/values.yaml > /tmp/deployed.yaml
           drift=0
           check() {
             name=$1; module=$2; shift 2
-            last=$(git log -1 --format=%H -- "$@" | cut -c1-7)
-            tag=$(yq ".$module.tag" /tmp/deployed.yaml)
-            if [ "$last" != "$tag" ]; then
-              echo "::error::DRIFT [$name]: ultimo commit su main = $last, ma deployato = $tag → non allineato"
-              drift=1
+            last=$(git log -1 --format=%H -- "$@")
+            ver=$(yq ".$module.tag" /tmp/deployed.yaml)                 # es. 1.3.0
+            depcommit=$(git rev-list -n1 "v$ver" 2>/dev/null || true)   # commit della release deployata
+            if [ -z "$depcommit" ]; then
+              echo "::error::DRIFT [$name]: tag v$ver non trovato (versione deployata senza release)"; drift=1
+            elif git merge-base --is-ancestor "$last" "$depcommit"; then
+              echo "OK [$name]: ultima modifica inclusa in v$ver"
             else
-              echo "OK [$name]: $last == $tag"
+              echo "::error::DRIFT [$name]: modifica su main NON ancora rilasciata (deployato v$ver)"; drift=1
             fi
           }
           COMMON="shared gradle gradlew settings.gradle.kts build.gradle.kts gradle.properties"

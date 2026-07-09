@@ -1,0 +1,58 @@
+# ArgoCD Notifications: alert quando l'app va Degraded (o quando viene deployata).
+# Notifier = webhook verso un piccolo ricevitore "echo" (in un caso reale: Slack/email/Teams).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notif-echo
+  namespace: argocd
+  labels: { app: notif-echo }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: notif-echo } }
+  template:
+    metadata: { labels: { app: notif-echo } }
+    spec:
+      containers:
+        - name: echo
+          image: mendhak/http-https-echo:34
+          env:
+            - { name: HTTP_PORT, value: "8080" }
+          ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: notif-echo, namespace: argocd }
+spec:
+  selector: { app: notif-echo }
+  ports: [{ port: 8080, targetPort: 8080 }]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  service.webhook.echo: |
+    url: http://notif-echo:8080
+    headers:
+      - name: Content-Type
+        value: application/json
+  template.app-health-degraded: |
+    webhook:
+      echo:
+        method: POST
+        body: |
+          {"alert":"HEALTH DEGRADED","app":"{{.app.metadata.name}}","health":"{{.app.status.health.status}}","sync":"{{.app.status.sync.status}}"}
+  template.app-deployed: |
+    webhook:
+      echo:
+        method: POST
+        body: |
+          {"event":"DEPLOYED","app":"{{.app.metadata.name}}","revision":"{{.app.status.sync.revision}}"}
+  trigger.on-health-degraded: |
+    - when: app.status.health.status == 'Degraded'
+      send: [app-health-degraded]
+  trigger.on-deployed: |
+    - when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+      oncePer: app.status.sync.revision
+      send: [app-deployed]
