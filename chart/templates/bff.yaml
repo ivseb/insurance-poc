@@ -13,13 +13,12 @@ spec:
     spec:
       containers:
         - name: bff
-          image: ghcr.io/ivseb/insurance-poc-bff
+          image: "{{ .Values.bff.image }}:{{ .Values.bff.tag }}"
           ports:
             - containerPort: 8080
           env:
-            # Il BFF raggiunge policy-api via DNS di servizio. Niente STRAPI_URL → contenuti mock.
             - name: POLICY_API_URL
-              value: "http://policy-api:9000"
+              value: "{{ .Values.bff.policyApiUrl }}"
           readinessProbe:
             httpGet: { path: /health, port: 8080 }
             initialDelaySeconds: 15
