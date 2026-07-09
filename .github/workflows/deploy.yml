@@ -41,11 +41,19 @@ jobs:
     outputs:
       jvm: ${{ steps.f.outputs.jvm }}
       web: ${{ steps.f.outputs.web }}
-      tag: ${{ steps.t.outputs.tag }}
+      tag: ${{ steps.semver.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - id: t
-        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+        with:
+          fetch-depth: 0   # serve la storia + i tag per calcolare la versione
+      # Semantic versioning da conventional-commits: feat→minor, BREAKING/!→major, altro→patch.
+      - uses: paulhatch/semantic-version@v5.4.0
+        id: semver
+        with:
+          tag_prefix: "v"
+          major_pattern: "/(BREAKING CHANGE|!:)/"
+          minor_pattern: "/^feat/"
+          version_format: "${major}.${minor}.${patch}"
       - uses: dorny/paths-filter@v3
         id: f
         with:
@@ -187,3 +195,7 @@ jobs:
             || { echo "nothing to commit"; exit 0; }
           git branch -f env/prod
           git push -f origin env/prod
+      - name: Tag di release (vX.Y.Z sul commit di main)
+        run: |
+          git tag "v${{ needs.changes.outputs.tag }}" ${{ github.sha }} || true
+          git push origin "v${{ needs.changes.outputs.tag }}" || echo "tag già esistente"
