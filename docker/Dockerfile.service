@@ -6,6 +6,10 @@ ARG JAR
 ARG SHA=dev
 # SHA di build esposto dall'app su /version (per il controllo drift).
 ENV BUILD_SHA=$SHA
+# OTel Java agent: auto-instrumentation NATIVA di Ktor (server+client), Netty, JVM e logback
+# (trace + metriche + log correlati) → OTLP. Config via env nel chart Helm.
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.11.0/opentelemetry-javaagent.jar /otel/agent.jar
+ENV JAVA_TOOL_OPTIONS="-javaagent:/otel/agent.jar"
 COPY ${JAR} /app/app.jar
 # La porta effettiva è decisa dall'app via env PORT (bff=8080, policy-api=9000).
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

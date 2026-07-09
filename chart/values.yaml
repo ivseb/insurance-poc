@@ -13,3 +13,8 @@ bff:
 web:
   image: ghcr.io/ivseb/insurance-poc-web
   tag: f0a085f
+
+# OpenTelemetry: i servizi JVM esportano trace/metriche/log al collector (otel-lgtm).
+otel:
+  endpoint: http://otel-lgtm.observability:4318
+  namespace: insurance-poc

@@ -1,0 +1,72 @@
+# Stack osservabilità "tutto-in-uno" per il POC: grafana/otel-lgtm bundla
+# OTel Collector (OTLP :4317 gRPC / :4318 HTTP) + Prometheus (metriche) + Loki (log)
+# + Tempo (trace) + Grafana (:3000, datasource già cablati). Deploy come infra (non nell'app chart).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-lgtm
+  namespace: observability
+  labels: { app: otel-lgtm }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: otel-lgtm }
+  template:
+    metadata:
+      labels: { app: otel-lgtm }
+    spec:
+      containers:
+        - name: otel-lgtm
+          image: grafana/otel-lgtm:0.8.1
+          ports:
+            - { name: grafana, containerPort: 3000 }
+            - { name: otlp-grpc, containerPort: 4317 }
+            - { name: otlp-http, containerPort: 4318 }
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+          readinessProbe:
+            httpGet: { path: /api/health, port: 3000 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { memory: 2Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-lgtm
+  namespace: observability
+spec:
+  selector: { app: otel-lgtm }
+  ports:
+    - { name: grafana, port: 3000, targetPort: 3000 }
+    - { name: otlp-grpc, port: 4317, targetPort: 4317 }
+    - { name: otlp-http, port: 4318, targetPort: 4318 }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: grafana.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: otel-lgtm
+                port:
+                  number: 3000

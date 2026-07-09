@@ -16,6 +16,17 @@ spec:
           image: "{{ .Values.policyApi.image }}:{{ .Values.policyApi.tag }}"
           ports:
             - containerPort: 9000
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: policy-api
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "{{ .Values.otel.endpoint }}"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_LOGS_EXPORTER
+              value: otlp
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace={{ .Values.otel.namespace }},deployment.environment=prod"
           readinessProbe:
             httpGet: { path: /health, port: 9000 }
             initialDelaySeconds: 15
