@@ -19,6 +19,16 @@ spec:
           env:
             - name: POLICY_API_URL
               value: "{{ .Values.bff.policyApiUrl }}"
+            - name: OTEL_SERVICE_NAME
+              value: bff
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "{{ .Values.otel.endpoint }}"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_LOGS_EXPORTER
+              value: otlp
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace={{ .Values.otel.namespace }},deployment.environment=prod"
           readinessProbe:
             httpGet: { path: /health, port: 8080 }
             initialDelaySeconds: 15
