@@ -1,0 +1,19 @@
+# Stack osservabilità (otel-lgtm) gestito da ArgoCD (non più kubectl apply imperativo).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ivseb/insurance-poc
+    targetRevision: main            # infra: nessun tag immagine → vive su main
+    path: observability
+    directory:
+      include: 'otel-lgtm.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }

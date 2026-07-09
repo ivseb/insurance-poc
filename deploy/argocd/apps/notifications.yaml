@@ -1,0 +1,19 @@
+# Config ArgoCD Notifications + ricevitore echo, gestiti da ArgoCD stesso.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notifications
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ivseb/insurance-poc
+    targetRevision: main
+    path: observability
+    directory:
+      include: 'argocd-notifications.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }

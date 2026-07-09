@@ -1,0 +1,21 @@
+# App-of-apps: unico punto di bootstrap. Gestisce le Application figlie in deploy/argocd/apps
+# (insurance-poc, monitoring, notifications) → tutto diventa GitOps + self-healing.
+# Bootstrap una-tantum:  kubectl apply -f deploy/argocd/root.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ivseb/insurance-poc
+    targetRevision: main
+    path: deploy/argocd/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
