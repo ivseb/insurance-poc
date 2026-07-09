@@ -19,4 +19,11 @@ dependencies {
     implementation(libs.ktor.serialization.json)
     implementation(libs.ktor.server.callLogging)
     implementation(libs.logback.classic)
+    // OpenTelemetry: instrumentation nativa Ktor server + JVM + log
+    implementation(platform(libs.otel.bom.alpha))
+    implementation(libs.otel.ktor)
+    implementation(libs.otel.sdk.autoconfigure)
+    implementation(libs.otel.exporter.otlp)
+    implementation(libs.otel.runtime)
+    implementation(libs.otel.logback)
 }

@@ -4,7 +4,6 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} trace_id=%X{trace_id} - %msg%n</pattern>
         </encoder>
     </appender>
-    <!-- Esporta i log via OTLP (correlati con trace_id/span_id) verso il collector. -->
     <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
         <captureExperimentalAttributes>true</captureExperimentalAttributes>
         <captureMdcAttributes>*</captureMdcAttributes>

@@ -29,4 +29,11 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.contentNegotiation)
     implementation(libs.logback.classic)
+    // OpenTelemetry: instrumentation nativa Ktor (server+client) + JVM + log
+    implementation(platform(libs.otel.bom.alpha))
+    implementation(libs.otel.ktor)
+    implementation(libs.otel.sdk.autoconfigure)
+    implementation(libs.otel.exporter.otlp)
+    implementation(libs.otel.runtime)
+    implementation(libs.otel.logback)
 }

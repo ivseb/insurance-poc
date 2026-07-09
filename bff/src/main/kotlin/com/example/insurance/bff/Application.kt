@@ -7,6 +7,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import kotlinx.serialization.json.Json
 
 fun main() {
@@ -15,6 +16,8 @@ fun main() {
 }
 
 fun Application.module() {
+    // Tracing nativo Ktor: span in ingresso + estrazione del trace context (correlazione).
+    install(KtorServerTelemetry) { setOpenTelemetry(openTelemetry) }
     install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
     install(CallLogging)
 
