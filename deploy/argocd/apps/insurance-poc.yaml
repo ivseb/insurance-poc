@@ -3,6 +3,10 @@ kind: Application
 metadata:
   name: insurance-poc
   namespace: argocd
+  annotations:
+    # sottoscrizioni notifiche (dichiarative, non più via kubectl annotate)
+    notifications.argoproj.io/subscribe.on-health-degraded.echo: ""
+    notifications.argoproj.io/subscribe.on-deployed.echo: ""
 spec:
   project: default
   source:

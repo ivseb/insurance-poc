@@ -69,13 +69,7 @@ kubectl -n ingress-nginx patch configmap ingress-nginx-controller --type merge \
 kubectl -n ingress-nginx rollout restart deploy/ingress-nginx-controller
 ```
 
-### 3) Osservabilità + Notifiche
-```bash
-kubectl apply -f observability/otel-lgtm.yaml
-kubectl apply -f observability/argocd-notifications.yaml   # (dopo aver installato ArgoCD, passo 4)
-```
-
-### 4) ArgoCD (con dashboard via ingress) + Application
+### 3) ArgoCD (con dashboard via ingress)
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -83,12 +77,16 @@ kubectl -n argocd rollout status deploy/argocd-server
 kubectl -n argocd patch configmap argocd-cmd-params-cm --type merge -p '{"data":{"server.insecure":"true"}}'
 kubectl -n argocd rollout restart deploy/argocd-server
 kubectl apply -f deploy/argocd/argocd-ingress.yaml
-kubectl apply -f deploy/argocd/application.yaml            # targetRevision env/prod, path chart (Helm)
-# sottoscrivi le notifiche
-kubectl -n argocd annotate application insurance-poc \
-  notifications.argoproj.io/subscribe.on-health-degraded.echo="" \
-  notifications.argoproj.io/subscribe.on-deployed.echo="" --overwrite
 ```
+
+### 4) Bootstrap **app-of-apps** (un solo comando → tutto GitOps)
+```bash
+kubectl apply -f deploy/argocd/root.yaml
+```
+`root` gestisce le Application figlie in `deploy/argocd/apps/`: **insurance-poc** (app, `env/prod`+chart),
+**monitoring** (otel-lgtm) e **notifications** (config ArgoCD Notifications). Osservabilità e notifiche
+sono così **dichiarative + self-healing** come l'app (le sottoscrizioni notifiche sono nell'Application).
+L'unica cosa imperativa resta l'installazione di ArgoCD stesso (bootstrap).
 
 ### 5) Accesso
 | Cosa | URL | Credenziali |
