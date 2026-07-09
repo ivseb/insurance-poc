@@ -166,10 +166,19 @@ jobs:
           fi
       - name: Pubblica sul branch di deploy (env/prod)
         # main resta protetto (solo PR): i tag li scrive la CI su env/prod, che ArgoCD segue.
+        # Messaggio PARLANTE: riporta il commit reale su main (subject + link), così su ArgoCD
+        # la "revisione" dice cosa c'è davvero deployato, non solo "ci: deploy".
+        env:
+          SRC_MSG: ${{ github.event.head_commit.message }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          SUBJECT=$(printf '%s' "$SRC_MSG" | head -1)
           git add deploy/kustomization.yaml
-          git commit -m "ci: deploy ${{ needs.changes.outputs.tag }}" || { echo "nothing to commit"; exit 0; }
+          git commit \
+            -m "deploy ${{ needs.changes.outputs.tag }} — ${SUBJECT}" \
+            -m "source: ${{ github.repository }}@${{ github.sha }}" \
+            -m "https://github.com/${{ github.repository }}/commit/${{ github.sha }}" \
+            || { echo "nothing to commit"; exit 0; }
           git branch -f env/prod
           git push -f origin env/prod

@@ -18,9 +18,12 @@ fun Application.configureRouting() {
     routing {
         get("/health") { call.respond(mapOf("status" to "ok")) }
 
-        // SHA del commit da cui è stata buildata l'immagine (iniettato in build → env BUILD_SHA).
-        // Serve a verificare COSA gira davvero rispetto a main (drift).
-        get("/version") { call.respond(mapOf("sha" to (System.getenv("BUILD_SHA") ?: "dev"))) }
+        // SHA di build di TUTTO il backend, in un colpo solo (raggiungibile dall'ingress via /api).
+        // Risponde alla domanda "cosa c'è davvero su?": bff + policy-api con il loro git-SHA.
+        get("/api/version") {
+            val pa = runCatching { policyApi.version() }.getOrDefault("unknown")
+            call.respond(mapOf("bff" to (System.getenv("BUILD_SHA") ?: "dev"), "policyApi" to pa))
+        }
 
         // --- login mock: credenziali non vuote -> JWT firmato dal BFF ---
         // Web: JWT in cookie HttpOnly/SameSite (non leggibile dal JS). Android: usa il token nel body.

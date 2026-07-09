@@ -32,6 +32,10 @@ class PolicyApi {
         if (token.isNotBlank()) header("Authorization", "Bearer $token")
     }
 
+    /** git-SHA di build di policy-api (endpoint /version), per il check "cosa c'è su". */
+    suspend fun version(): String =
+        outbound.get("$baseUrl/version") { auth() }.body<Map<String, String>>()["sha"] ?: "unknown"
+
     suspend fun list(): List<PolicySummary> =
         outbound.get("$baseUrl/policies") { auth() }.body()
 
