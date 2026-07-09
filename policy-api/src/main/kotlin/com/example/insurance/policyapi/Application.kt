@@ -11,6 +11,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
+import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.Json
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 9000
     embeddedServer(Netty, port = port, host = "0.0.0.0") {
+        install(KtorServerTelemetry) { setOpenTelemetry(openTelemetry) }
         install(ContentNegotiation) { json(Json { prettyPrint = true }) }
         install(CallLogging)
         routing {

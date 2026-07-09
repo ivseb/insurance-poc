@@ -20,6 +20,8 @@ import kotlinx.serialization.json.Json
  * non raggiungono mai browser/app. È questo che soddisfa il requisito "mai dal frontend".
  */
 private val outbound = HttpClient(OkHttp) {
+    // Propaga il trace context alle chiamate s2s (bff→policy-api) → trace distribuita correlata.
+    install(io.opentelemetry.instrumentation.ktor.v3_0.KtorClientTelemetry) { setOpenTelemetry(openTelemetry) }
     install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
 }
 

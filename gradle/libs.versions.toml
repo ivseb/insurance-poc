@@ -13,6 +13,7 @@ composeBom = "2026.06.00"
 androidxActivity = "1.11.0"
 auth0Jwt = "4.4.0"
 logback = "1.5.12"
+otelInstrAlpha = "2.18.1-alpha"   # OTel instrumentation BOM (alpha: include ktor, runtime, logback)
 
 [libraries]
 # --- comuni / KMP ---
@@ -38,6 +39,14 @@ ktor-server-callLogging = { module = "io.ktor:ktor-server-call-logging", version
 ktor-server-defaultHeaders = { module = "io.ktor:ktor-server-default-headers", version.ref = "ktor" }
 auth0-jwt = { module = "com.auth0:java-jwt", version.ref = "auth0Jwt" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+# --- OpenTelemetry: library instrumentation nativa Ktor (traces coroutine-safe) + JVM + log ---
+otel-bom-alpha = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha", version.ref = "otelInstrAlpha" }
+otel-ktor = { module = "io.opentelemetry.instrumentation:opentelemetry-ktor-3.0" }
+otel-sdk-autoconfigure = { module = "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure" }
+otel-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
+otel-runtime = { module = "io.opentelemetry.instrumentation:opentelemetry-runtime-telemetry-java17" }
+otel-logback = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0" }
 
 # --- Web (Compose HTML + Kobweb core, niente Silk) ---
 compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "composeRuntime" }
