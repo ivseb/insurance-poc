@@ -26,7 +26,7 @@ fun ChiSiamoPage() {
                     FeatureItem(1, "Persone prima di tutto", "Prodotti chiari e assistenza umana quando serve.")
                     FeatureItem(2, "Tecnologia al servizio", "Tutto online, accessibile e veloce.")
                     FeatureItem(3, "Trasparenza", "Coperture esplicite, nessuna sorpresa.")
-                    FeatureItem(4, "Tante cose", "Tante cose")
+//                    FeatureItem(4, "Tante cose", "Tante cose")
                 }
             }
         }
