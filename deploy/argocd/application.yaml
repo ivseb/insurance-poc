@@ -9,7 +9,8 @@ spec:
     repoURL: https://github.com/ivseb/insurance-poc
     # main è protetto (solo PR); i tag di deploy vivono su env/prod, scritto dalla CI.
     targetRevision: env/prod
-    path: deploy
+    # chart Helm: ArgoCD lo renderizza con chart/values.yaml (dove la CI scrive i tag).
+    path: chart
   destination:
     server: https://kubernetes.default.svc
     namespace: insurance-poc

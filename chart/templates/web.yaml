@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: ghcr.io/ivseb/insurance-poc-web
+          image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
           ports:
             - containerPort: 80
           readinessProbe:
@@ -29,7 +29,6 @@ kind: Service
 metadata:
   name: web
 spec:
-  # ClusterIP: l'ingresso pubblico è l'Ingress (ingress-nginx), non più il Service.
   selector: { app: web }
   ports:
     - port: 80

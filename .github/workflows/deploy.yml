@@ -150,33 +150,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install kustomize
-        run: curl -sSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-      - name: Bump image tags
+      - name: Install yq
         run: |
-          TAG=${{ needs.changes.outputs.tag }}
-          cd deploy
-          if [ "${{ needs.jvm.result }}" = "success" ]; then
-            ../kustomize edit set image \
-              $PREFIX-policy-api=$PREFIX-policy-api:$TAG \
-              $PREFIX-bff=$PREFIX-bff:$TAG
-          fi
-          if [ "${{ needs.web.result }}" = "success" ]; then
-            ../kustomize edit set image $PREFIX-web=$PREFIX-web:$TAG
-          fi
-      - name: Pubblica sul branch di deploy (env/prod)
-        # main resta protetto (solo PR): i tag li scrive la CI su env/prod, che ArgoCD segue.
-        # Messaggio PARLANTE: riporta il commit reale su main (subject + link), così su ArgoCD
-        # la "revisione" dice cosa c'è davvero deployato, non solo "ci: deploy".
+          sudo curl -sSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+      - name: Aggiorna i tag su chart/values.yaml (accumulo) e pubblica su env/prod
+        # main resta protetto (solo PR): i tag li scrive la CI su env/prod (chart Helm), che ArgoCD segue.
+        # Accumulo: prima si preservano i tag già deployati (env/prod), poi si bumpano SOLO i moduli
+        # ricostruiti in questo run → niente regressioni sugli altri moduli.
+        # Messaggio PARLANTE: riporta il commit reale su main (subject + link).
         env:
           SRC_MSG: ${{ github.event.head_commit.message }}
         run: |
+          TAG=${{ needs.changes.outputs.tag }}
+          if git fetch -q origin env/prod 2>/dev/null && git show origin/env/prod:chart/values.yaml > /tmp/prev.yaml 2>/dev/null; then
+            for m in policyApi bff web; do
+              t=$(yq ".$m.tag" /tmp/prev.yaml)
+              [ "$t" != "null" ] && yq -i ".$m.tag = \"$t\"" chart/values.yaml
+            done
+          fi
+          if [ "${{ needs.jvm.result }}" = "success" ]; then
+            yq -i ".policyApi.tag = \"$TAG\"" chart/values.yaml
+            yq -i ".bff.tag = \"$TAG\"" chart/values.yaml
+          fi
+          if [ "${{ needs.web.result }}" = "success" ]; then
+            yq -i ".web.tag = \"$TAG\"" chart/values.yaml
+          fi
+          SUBJECT=$(printf '%s' "$SRC_MSG" | head -1)
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          SUBJECT=$(printf '%s' "$SRC_MSG" | head -1)
-          git add deploy/kustomization.yaml
+          git add chart/values.yaml
           git commit \
-            -m "deploy ${{ needs.changes.outputs.tag }} — ${SUBJECT}" \
+            -m "deploy $TAG — ${SUBJECT}" \
             -m "source: ${{ github.repository }}@${{ github.sha }}" \
             -m "https://github.com/${{ github.repository }}/commit/${{ github.sha }}" \
             || { echo "nothing to commit"; exit 0; }

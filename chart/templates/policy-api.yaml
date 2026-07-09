@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: policy-api
-          image: ghcr.io/ivseb/insurance-poc-policy-api
+          image: "{{ .Values.policyApi.image }}:{{ .Values.policyApi.tag }}"
           ports:
             - containerPort: 9000
           readinessProbe:

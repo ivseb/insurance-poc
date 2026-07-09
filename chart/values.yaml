@@ -1,0 +1,15 @@
+# Tag gestiti dalla CI (aggiornati SOLO per i moduli ricostruiti; gli altri restano — accumulo).
+ingressHost: insurance.127.0.0.1.nip.io
+
+policyApi:
+  image: ghcr.io/ivseb/insurance-poc-policy-api
+  tag: 1e29d1e
+
+bff:
+  image: ghcr.io/ivseb/insurance-poc-bff
+  tag: 1e29d1e
+  policyApiUrl: http://policy-api:9000
+
+web:
+  image: ghcr.io/ivseb/insurance-poc-web
+  tag: f0a085f

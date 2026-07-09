@@ -3,14 +3,12 @@ kind: Ingress
 metadata:
   name: insurance-poc
   annotations:
-    # l'endpoint /agencies è lento di proposito (~2.5s): allarga i timeout
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
 spec:
   ingressClassName: nginx
   rules:
-    # nip.io: insurance.127.0.0.1.nip.io risolve a 127.0.0.1 senza toccare /etc/hosts.
-    - host: insurance.127.0.0.1.nip.io
+    - host: {{ .Values.ingressHost | quote }}
       http:
         paths:
           - path: /
