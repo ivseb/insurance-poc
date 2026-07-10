@@ -2,20 +2,16 @@
 ingressHost: insurance.127.0.0.1.nip.io
 # Host per l'anteprima blue-green (green): web-preview + bff-preview, isolati dalla produzione.
 previewHost: preview.insurance.127.0.0.1.nip.io
-
 policyApi:
   image: ghcr.io/ivseb/insurance-poc-policy-api
-  tag: 1e29d1e
-
+  tag: 1.4.0
 bff:
   image: ghcr.io/ivseb/insurance-poc-bff
-  tag: 1e29d1e
+  tag: 1.4.0
   policyApiUrl: http://policy-api:9000
-
 web:
   image: ghcr.io/ivseb/insurance-poc-web
-  tag: f0a085f
-
+  tag: 1.2.0
 # OpenTelemetry: i servizi JVM esportano trace/metriche/log al collector (otel-lgtm).
 otel:
   endpoint: http://otel-lgtm.observability:4318
