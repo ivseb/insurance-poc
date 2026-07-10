@@ -1,10 +1,13 @@
-apiVersion: apps/v1
-kind: Deployment
+# WEB (frontend) come Argo Rollouts BLUE-GREEN: `web` (active) = produzione, `web-preview` = green.
+# Sul preview host l'ingress manda `/` a web-preview e `/api` a bff-preview → feature full-stack isolata.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: web
   labels: { app: web }
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels: { app: web }
   template:
@@ -23,11 +26,27 @@ spec:
           resources:
             requests: { cpu: 20m, memory: 32Mi }
             limits: { memory: 128Mi }
+  strategy:
+    blueGreen:
+      activeService: web
+      previewService: web-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: web
+spec:
+  selector: { app: web }
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-preview
 spec:
   selector: { app: web }
   ports:

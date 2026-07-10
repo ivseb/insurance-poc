@@ -1,3 +1,8 @@
+# Routing per-host che rende il blue-green full-stack ISOLATO:
+#   prod    ({{ .Values.ingressHost }})  → /api = bff (active) , / = web (active)
+#   preview ({{ .Values.previewHost }})  → /api = bff-preview  , / = web-preview
+# Portando /api sull'ingress, il web-green del preview parla col bff-green del preview senza
+# dover cambiare l'immagine web (il suo nginx punta a `bff`, ma qui /api non arriva mai al web).
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -11,10 +16,34 @@ spec:
     - host: {{ .Values.ingressHost | quote }}
       http:
         paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: bff
+                port:
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: web
+                port:
+                  number: 80
+    - host: {{ .Values.previewHost | quote }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: bff-preview
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-preview
                 port:
                   number: 80

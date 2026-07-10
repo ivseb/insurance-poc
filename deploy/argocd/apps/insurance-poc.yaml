@@ -18,6 +18,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: insurance-poc
+  # Argo Rollouts inietta `rollouts-pod-template-hash` nel selector dei Service active/preview:
+  # è il controller a gestirlo, quindi ArgoCD deve IGNORARLO (altrimenti selfHeal lo annulla di continuo).
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/selector/rollouts-pod-template-hash
   syncPolicy:
     automated:
       prune: true      # rimuove risorse tolte dal repo

@@ -1,5 +1,7 @@
 # Tag gestiti dalla CI (aggiornati SOLO per i moduli ricostruiti; gli altri restano — accumulo).
 ingressHost: insurance.127.0.0.1.nip.io
+# Host per l'anteprima blue-green (green): web-preview + bff-preview, isolati dalla produzione.
+previewHost: preview.insurance.127.0.0.1.nip.io
 
 policyApi:
   image: ghcr.io/ivseb/insurance-poc-policy-api

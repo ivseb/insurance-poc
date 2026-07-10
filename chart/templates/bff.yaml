@@ -1,10 +1,14 @@
-apiVersion: apps/v1
-kind: Deployment
+# BFF come Argo Rollouts BLUE-GREEN: la nuova versione entra su `bff-preview` (green) e resta in pausa;
+# `bff` (active) continua a servire la produzione finché non si promuove. Il nginx del web punta a `bff`,
+# quindi resta valido (active). Il routing /api per-host lo fa l'ingress (prod→bff, preview→bff-preview).
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: bff
   labels: { app: bff }
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels: { app: bff }
   template:
@@ -36,11 +40,27 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 512Mi }
+  strategy:
+    blueGreen:
+      activeService: bff            # produzione
+      previewService: bff-preview   # anteprima della nuova versione (green)
+      autoPromotionEnabled: false   # promozione MANUALE (il gate del blue-green)
+      scaleDownDelaySeconds: 30     # tiene su il vecchio RS 30s dopo la promozione → rollback rapido
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: bff
+  name: bff            # ACTIVE: il controller inietta rollouts-pod-template-hash → punta al RS stabile
+spec:
+  selector: { app: bff }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff-preview    # PREVIEW: punta al RS green durante un rilascio; al RS stabile quando a riposo
 spec:
   selector: { app: bff }
   ports:
