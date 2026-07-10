@@ -93,7 +93,7 @@ private object Mock {
     // Titolo volutamente diverso dal default web: così si "vede" l'idratazione dal CMS via BFF.
     val home = CmsHome(
         heroEyebrow = "ACME · contenuto dal BFF",
-        heroTitle = "Il futuro inizia dai nostri sogni",
+        heroTitle = "Il futuro inizia dalle nostre idee",
         heroSubtitle = "Polizze auto, casa e vita pensate per la vita reale. Gestisci tutto dall'area personale.",
         heroCtaLabel = "Fai un preventivo",
         products = listOf(
