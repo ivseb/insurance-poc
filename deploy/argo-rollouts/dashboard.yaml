@@ -1,0 +1,76 @@
+# Dashboard Argo Rollouts servita IN-CLUSTER (invece di `kubectl argo rollouts dashboard` in locale),
+# esposta via ingress nip.io. Usa l'immagine del plugin col sottocomando `dashboard`.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rollouts-dashboard
+  namespace: argo-rollouts
+---
+# Riuso la ClusterRole del controller: lettura/scrittura su rollouts + core (pod, replicaset, service),
+# così i pulsanti Promote/Abort della UI funzionano davvero. (OK per cluster locale di demo.)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rollouts-dashboard
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-rollouts
+subjects:
+  - kind: ServiceAccount
+    name: rollouts-dashboard
+    namespace: argo-rollouts
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rollouts-dashboard
+  namespace: argo-rollouts
+  labels: { app: rollouts-dashboard }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: rollouts-dashboard }
+  template:
+    metadata:
+      labels: { app: rollouts-dashboard }
+    spec:
+      serviceAccountName: rollouts-dashboard
+      containers:
+        - name: dashboard
+          image: quay.io/argoproj/kubectl-argo-rollouts:v1.9.0
+          args: ["dashboard", "--port", "3100"]
+          ports:
+            - containerPort: 3100
+          resources:
+            requests: { cpu: 10m, memory: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollouts-dashboard
+  namespace: argo-rollouts
+spec:
+  selector: { app: rollouts-dashboard }
+  ports:
+    - port: 80
+      targetPort: 3100
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rollouts-dashboard
+  namespace: argo-rollouts
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: rollouts.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rollouts-dashboard
+                port:
+                  number: 80
